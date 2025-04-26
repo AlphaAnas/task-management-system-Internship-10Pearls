@@ -1,13 +1,110 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 251 78% 74%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 60 100% 50%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 60 100% 50%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 251 78% 74%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 251 78% 98%;
+    --sidebar-foreground: 251 30% 30%;
+    --sidebar-primary: 251 78% 74%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 251 78% 95%;
+    --sidebar-accent-foreground: 251 30% 30%;
+    --sidebar-border: 251 78% 90%;
+    --sidebar-ring: 251 78% 74%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 251 78% 74%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 60 100% 50%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 60 100% 50%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 251 78% 74%;
+
+    --sidebar-background: 251 30% 20%;
+    --sidebar-foreground: 251 78% 95%;
+    --sidebar-primary: 251 78% 74%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 251 30% 25%;
+    --sidebar-accent-foreground: 251 78% 95%;
+    --sidebar-border: 251 30% 30%;
+    --sidebar-ring: 251 78% 74%;
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .task-card {
+    @apply bg-white rounded-lg border border-purple-200 shadow-sm p-4 transition-all duration-300 hover:shadow-md;
+  }
+  
+  .btn-primary {
+    @apply bg-purple-500 hover:bg-purple-600 text-white rounded-md px-4 py-2 transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-yellow-500 hover:bg-yellow-600 text-black rounded-md px-4 py-2 transition-colors;
+  }
 }
