@@ -1,19 +1,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthState, LoginCredentials, RegisterCredentials, User } from '@/types';
 import { toast } from '@/components/ui/sonner';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'admin';
-}
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string) => Promise<boolean>;
+interface AuthContextType extends AuthState {
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => void;
 }
 
@@ -27,76 +20,157 @@ export const useAuth = () => {
   return context;
 };
 
-// Mock users for demonstration (in a real app, this would be in a database)
-const mockUsers: User[] = [
-  { id: '1', name: 'Admin User', email: 'admin@example.com', role: 'admin' },
-  { id: '2', name: 'Regular User', email: 'user@example.com', role: 'user' },
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    token: null,
+    isAuthenticated: false,
+    isLoading: true,
+  });
+  const navigate = useNavigate();
+
+  // Load user from localStorage on mount
   useEffect(() => {
-    // Check if user is already logged in via localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const loadUser = () => {
+      try {
+        const storedToken = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+
+        if (storedToken && storedUser) {
+          const user = JSON.parse(storedUser) as User;
+          
+          setAuthState({
+            user,
+            token: storedToken,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } else {
+          setAuthState({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      } catch (error) {
+        console.error('Error loading user from localStorage', error);
+        setAuthState({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      }
+    };
+
+    loadUser();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // In a real app, this would be an actual API call to validate credentials
-    const foundUser = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-    
-    if (foundUser && password === 'password') { // Simple password check for demo
-      setUser(foundUser);
-      localStorage.setItem('user', JSON.stringify(foundUser));
-      toast.success('Logged in successfully!');
-      return true;
+  // In a real application, you'd make API calls to your backend
+  // This is a mock implementation
+  const login = async (credentials: LoginCredentials) => {
+    try {
+      // In a real app, this would be a fetch call to your backend API
+      // Simulating API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      
+      // Mock user data - in a real app, this would come from your backend
+      const mockUser: User = {
+        id: '1',
+        email: credentials.email,
+        name: 'Test User',
+        role: credentials.email.includes('admin') ? 'admin' : 'client',
+        createdAt: new Date().toISOString(),
+      };
+
+      // Mock JWT token - in a real app, this would come from your backend
+      const mockToken = 'mock-jwt-token';
+
+      // Save to localStorage
+      localStorage.setItem('token', mockToken);
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      
+      // Update state
+      setAuthState({
+        user: mockUser,
+        token: mockToken,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      toast.success("Logged in successfully");
+      navigate(mockUser.role === 'admin' ? '/admin/dashboard' : '/dashboard');
+    } catch (error) {
+      toast.error("Login failed. Please check your credentials.");
+      console.error('Login error', error);
     }
-    
-    toast.error('Invalid email or password');
-    return false;
   };
 
-  const signup = async (name: string, email: string, password: string): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Check if user already exists
-    const userExists = mockUsers.some(u => u.email.toLowerCase() === email.toLowerCase());
-    
-    if (userExists) {
-      toast.error('User with this email already exists');
-      return false;
+  const register = async (credentials: RegisterCredentials) => {
+    try {
+      // In a real app, this would be a fetch call to your backend API
+      // Simulating API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      
+      // Mock user data - in a real app, this would come from your backend
+      const mockUser: User = {
+        id: '2',
+        email: credentials.email,
+        name: credentials.name,
+        role: 'client', // By default, new users are clients
+        createdAt: new Date().toISOString(),
+      };
+
+      // Mock JWT token - in a real app, this would come from your backend
+      const mockToken = 'mock-jwt-token';
+
+      // Save to localStorage
+      localStorage.setItem('token', mockToken);
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      
+      // Update state
+      setAuthState({
+        user: mockUser,
+        token: mockToken,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      toast.success("Account created successfully");
+      navigate('/dashboard');
+    } catch (error) {
+      toast.error("Registration failed. Please try again.");
+      console.error('Registration error', error);
     }
-    
-    // In a real app, this would create a user in the database
-    const newUser: User = {
-      id: Math.random().toString(36).substring(2, 9),
-      name,
-      email,
-      role: 'user',
-    };
-    
-    // For demo purposes, we'll just log the user in
-    setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
-    toast.success('Account created successfully!');
-    return true;
   };
 
   const logout = () => {
-    setUser(null);
+    // Clear localStorage
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
-    toast.info('Logged out');
+    
+    // Update state
+    setAuthState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
+    
+    toast.success("Logged out successfully");
+    navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{
+        ...authState,
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
