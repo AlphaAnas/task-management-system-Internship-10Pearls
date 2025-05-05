@@ -1,5 +1,7 @@
-
+import axios from 'axios';
 import { Task } from "@/types";
+
+const API_URL = 'http://localhost:5137/api/todoapi';
 
 // Mock task data
 const mockTasks: Task[] = [
@@ -66,67 +68,85 @@ const saveTasksToStorage = (tasks: Task[]) => {
 
 export const taskService = {
   // Get all tasks
-  getTasks: async (): Promise<Task[]> => {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return getTasksFromStorage();
+  async getTasks(): Promise<Task[]> {
+    const response = await axios.get(`${API_URL}`);
+    return response.data.map((todo: any) => ({
+      id: todo.id.toString(),
+      title: todo.title,
+      description: todo.details || '',
+      status: todo.isDone ? 'completed' : 'todo',
+      priority: 'medium', // Default as ToDo model doesn't have priority
+      dueDate: todo.date,
+      assignedTo: null, // ToDo model doesn't have assignedTo
+      createdBy: '1', // Default as ToDo model doesn't have createdBy
+      createdAt: todo.date,
+      updatedAt: todo.date
+    }));
   },
 
   // Get a specific task
-  getTask: async (id: string): Promise<Task | undefined> => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const tasks = getTasksFromStorage();
-    return tasks.find(task => task.id === id);
+  async getTask(id: string): Promise<Task> {
+    const response = await axios.get(`${API_URL}/${id}`);
+    const todo = response.data;
+    return {
+      id: todo.id.toString(),
+      title: todo.title,
+      description: todo.details || '',
+      status: todo.isDone ? 'completed' : 'todo',
+      priority: 'medium',
+      dueDate: todo.date,
+      assignedTo: null,
+      createdBy: '1',
+      createdAt: todo.date,
+      updatedAt: todo.date
+    };
   },
 
   // Create a new task
-  createTask: async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<Task> => {
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    
-    const tasks = getTasksFromStorage();
-    const newTask: Task = {
-      ...task,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+  async createTask(task: Partial<Task>): Promise<Task> {
+    const todoToCreate = {
+      title: task.title || '',
+      details: task.description || '',
+      date: task.dueDate || new Date().toISOString(),
+      isDone: task.status === 'completed'
     };
     
-    const updatedTasks = [...tasks, newTask];
-    saveTasksToStorage(updatedTasks);
-    
-    return newTask;
+    try {
+      const response = await axios.post(`${API_URL}`, todoToCreate);
+      const createdTodo = response.data;
+      
+      return {
+        id: createdTodo.id.toString(),
+        title: createdTodo.title,
+        description: createdTodo.details || '',
+        status: createdTodo.isDone ? 'completed' : 'todo',
+        priority: task.priority || 'medium',
+        dueDate: createdTodo.date,
+        assignedTo: task.assignedTo || null,
+        createdBy: task.createdBy || '1',
+        createdAt: createdTodo.date,
+        updatedAt: createdTodo.date
+      };
+    } catch (error) {
+      console.error('Error creating task:', error);
+      throw error;
+    }
   },
 
   // Update an existing task
-  updateTask: async (id: string, updatedTask: Partial<Task>): Promise<Task> => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    
-    const tasks = getTasksFromStorage();
-    const taskIndex = tasks.findIndex(task => task.id === id);
-    
-    if (taskIndex === -1) {
-      throw new Error('Task not found');
-    }
-    
-    const updatedTaskList = [...tasks];
-    updatedTaskList[taskIndex] = {
-      ...updatedTaskList[taskIndex],
-      ...updatedTask,
-      updatedAt: new Date().toISOString(),
+  async updateTask(id: string, task: Partial<Task>): Promise<void> {
+    const todoToUpdate = {
+      id: parseInt(id),
+      title: task.title,
+      details: task.description,
+      date: task.dueDate || new Date().toISOString(),
+      isDone: task.status === 'completed'
     };
-    
-    saveTasksToStorage(updatedTaskList);
-    
-    return updatedTaskList[taskIndex];
+    await axios.put(`${API_URL}/${id}`, todoToUpdate);
   },
 
   // Delete a task
-  deleteTask: async (id: string): Promise<void> => {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    
-    const tasks = getTasksFromStorage();
-    const updatedTasks = tasks.filter(task => task.id !== id);
-    
-    saveTasksToStorage(updatedTasks);
-  },
+  async deleteTask(id: string): Promise<void> {
+    await axios.delete(`${API_URL}/${id}`);
+  }
 };
